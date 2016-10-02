@@ -5,11 +5,12 @@
 
 #include <thread>
 #include <vector>
+#include <chrono>
+#include <mutex>
+
 #include "Piece.h"
-#include "Assemblage.h"
 #include "File.h"
 
-#include <mutex>
 
 
 

@@ -1,5 +1,4 @@
 #include "Production.h"
-#include <chrono>
 
 std::condition_variable cv;
 std::mutex m;
@@ -69,13 +68,13 @@ void Production::usinage(File<Piece>* file)
 	switch (file->premier().getType())
 	{
 	case Type::HEAD:
-		manufacturingTime = 20; //represents 2 min in real time
+		manufacturingTime = 120; //represents 2 min in real time
 		break;
 	case Type::SKIRT:
-		manufacturingTime = 30;
+		manufacturingTime = 180;
 		break;
 	case Type::AXIS:
-		manufacturingTime = 25;
+		manufacturingTime = 150;
 		break;
 	}
 	while (m_Piston->taille() <  100 && !file->estVide()) {
@@ -83,6 +82,7 @@ void Production::usinage(File<Piece>* file)
 		std::this_thread::sleep_for(std::chrono::milliseconds(manufacturingTime)); // represents the time of manufacturing
 
 		while (pieceAlreadyOnProduction(p.getType())) {
+			//Wait the end of previous fabrication from the MP machine 
 			std::unique_lock<std::mutex> lk(m);
 			cv.wait(lk);
 		}
@@ -93,7 +93,7 @@ void Production::usinage(File<Piece>* file)
 		m.unlock();
 		
 		if (rand() % 4 == 0) {
-			std::this_thread::sleep_for(std::chrono::milliseconds(50 + (rand() % 50))); // represents time of fixing, between 5 and 10 minutes in real time
+			std::this_thread::sleep_for(std::chrono::milliseconds(300 + (rand() % 300))); // represents time of fixing, between 5 and 10 minutes in real time
 		}
 	}
 }
@@ -108,12 +108,13 @@ void Production::launch()
 			}
 			m.unlock();
 			cv.notify_all();
-			std::this_thread::sleep_for(std::chrono::milliseconds(10)); // represents the time of manufacturing
+			std::this_thread::sleep_for(std::chrono::milliseconds(60)); // represents the time of manufacturing
 			if (rand() % 4 == 0) {
-				std::this_thread::sleep_for(std::chrono::milliseconds(50 + (rand() % 50))); // represents time of fixing, between 5 and 10 minutes in real time
+				std::this_thread::sleep_for(std::chrono::milliseconds(300 + (rand() % 300))); // represents time of fixing, between 5 and 10 minutes in real time
 			}
 			Piece* p = new Piece(3); // Creation of piece Piston
 			m_Piston->enfiler(*p);
+			cout << "Creation de la piece piston n°" << m_Piston->taille() << endl;
 		}
 	}
 }
@@ -177,8 +178,8 @@ int main()
 
 
 
-	// Constructs the new thread and runs it. Does not block execution.
 
+	clock_t begin = clock();
 
 	prod.initStack();
 
@@ -194,6 +195,7 @@ int main()
 
 	cout << "Bloc MA : " << *MA << endl;
 
+	// Constructs the new thread and runs it. Does not block execution.
 
 	t[0] = thread(&Production::usinage, prod, MT);
 	t[1] = thread(&Production::usinage, prod, MJ);
@@ -201,11 +203,8 @@ int main()
 	t[3] = thread(&Production::launch, prod);
 
 	// Makes the main thread wait for the new thread to finish execution, therefore blocks its own execution.
-	clock_t begin = clock();
 
-
-
-	cout << "join" << endl;
+	cout << "Execution parallele" << endl;
 	t[0].join();
 	t[1].join();
 	t[2].join();
@@ -213,24 +212,9 @@ int main()
 	clock_t end = clock();
 	double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
 	
-	cout << "end of join ; Time : " << elapsed_secs << endl;
-	cout << "Pistons" << *MPistons << endl;
+	cout << "Fin de l'execution parallele ; temps d'execution : " << elapsed_secs << " ; Temps reel estime : " << (elapsed_secs * 1000) /60 << " min" << endl;
+	cout << "Pistons : " << *MPistons << endl;
 
-	
-
-
-
-	//cout << *MT << endl;
-	//cout << *MJ << endl;
-	//cout << *MA << endl;
-
-
-
-
-
-
-
-	//prod.launch();
 	system("pause");
 	return EXIT_SUCCESS;
 }

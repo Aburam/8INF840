@@ -112,14 +112,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="File.h" />
-    <ClInclude Include="Assemblage.h" />
     <ClInclude Include="Production.h" />
     <ClInclude Include="Type.h" />
     <ClInclude Include="Piece.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Piece.cpp" />
-    <ClCompile Include="Assemblage.cpp" />
     <ClCompile Include="Production.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
